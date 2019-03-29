@@ -38,8 +38,8 @@ def gen_random_string(size=10, chars=string.ascii_uppercase + string.ascii_lower
 
 if __name__ == "__main__":
     try:
-        rows = sys.argv[1]
+        rows = int(sys.argv[1])
     except IndexError:
-        rows = 1000
+        rows = 40000
 
     gen_random_data(rows)

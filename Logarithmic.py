@@ -20,8 +20,9 @@ def my_task(d):
     n = math.log(len(keys), 2)
     n = int(math.ceil(n))
 
-    for i in range(0, n):
+    for i in xrange(0, n):
         access = d[random.choice(keys)].val0
+    time.sleep(1)
 
     end_task = time.time()
     return end_task-start_task
@@ -31,17 +32,19 @@ if __name__ == "__main__":
     config.partition_strategy = "DYNAMIC"
     my_data = MyData("my_ksp.my_data")
     start = time.time()
-    d = dict()
-    for partition in my_data.split():
-        d[partition.number_of_partitions] = my_task(my_data)
+    res = []
+    for i, partition in enumerate(my_data.split()):
+        print("Created task number: %s" % i)
+        res.append(my_task(partition))
 
-    d = compss_wait_on(d)
+    res = compss_wait_on(res)
+
     end = time.time()
+    print("Writing results")
     with open("results.txt", "a") as results:
         results.write("Logarithmic task results:\n")
-        results.write("    Total time:  %s seconds\n" % (end-start))
-        for partitions, time in d.iteritems():
-            results.write("    %s partitions:  %s seconds.\n" % (partitions, round(time, 4)))
+        results.write("    Total time:  %s seconds\n" % (round(end-start,4)))
+        #for partitions, time in res:
+        #    results.write("    %s partitions:  %s seconds.\n" % (partitions, round(time, 4)))
         results.write("\n")
-
-
+    print("Finished")
