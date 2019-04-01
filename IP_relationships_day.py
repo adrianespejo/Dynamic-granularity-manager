@@ -2,9 +2,10 @@ from pycompss.api.task import task
 from pycompss.api.api import compss_barrier
 from pycompss.api.api import compss_wait_on
 import time
+from random import randint
 
 from hecuba import config
-from data_model_v2 import *
+from data_model import *
 
 PUBLIC_SPACE_THRESHOLD = 10
 
@@ -24,6 +25,11 @@ def csv_to_cassandra(records):
         for line in f:
             person, date, ip, code = line.split("\t")
             records[int(person), date] = [ip, code]
+
+    for i in range(2000000):
+        date = '20{year:02d}{month:02d}{day:02d}'.format(year=randint(0, 18), month=randint(1, 12), day=randint(1, 28))
+        ip = '{}.{}.{}.{}'.format(randint(1, 255), randint(1, 255), randint(1, 255), randint(1, 255))
+        records[randint(0, 10000), date] = [ip, 'login']
 
 
 @task()
@@ -82,6 +88,7 @@ def compute_months(partition, blacklist, relationships):
 
 def main():
     # ############################# INITIALIZATION ########################### #
+    config.partition_strategy = "DYNAMIC"
     config.session.execute("DROP TABLE IF EXISTS test.example_dataset")
     config.session.execute("DROP TABLE IF EXISTS test.DateUsers")
     config.session.execute("DROP TABLE IF EXISTS test.IPConnections")
