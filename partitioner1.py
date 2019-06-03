@@ -294,5 +294,7 @@ class DynamicPartitioner(object):
                FROM hecuba.partitioning WHERE table_name = '{}.{}' ALLOW FILTERING""".format(self._father._ksp,
                                                                                              self._father._table))
         for partitions, start, end in partitions_times:
+            total_time = end - start
             if start is not None and end is not None:
-                self._partitions_time[partitions].append(end - start)
+                if total_time not in self._partitions_time[partitions]:
+                    self._partitions_time[partitions].append(total_time)
