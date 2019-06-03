@@ -184,7 +184,7 @@ class DynamicPartitioner(object):
             print("Could not create table hecuba.partitioning.")
             raise ex
 
-        self._prepared_store_id =\
+        self._prepared_store_id = \
             config.session.prepare("""INSERT INTO hecuba.partitioning
                                       (table_name, storage_id, number_of_partitions)
                                       VALUES (?, ?, ?)""")
