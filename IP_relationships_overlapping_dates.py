@@ -1,4 +1,6 @@
 from collections import defaultdict
+import sys
+import os
 from datetime import datetime
 import time
 from pycompss.api.task import task
@@ -20,13 +22,13 @@ FK_COD_OPERACION: type of operation (e.g. login, etc etc).
 '''
 
 
-def csv_to_cassandra(records):
-    with open("data.csv", "r") as f:
+def csv_to_cassandra(records, n):
+    with open("/home/bsc31/bsc31310/PartitionerTests/data.csv", "r") as f:
         for line in f:
             person, date, ip, code = line.split("\t")
             records[int(person), date] = [ip, code]
-    
-    for i in range(2000000):
+
+    for i in range(n):
         date = '20{year:02d}{month:02d}{day:02d}'.format(year=randint(0, 18), month=randint(1, 12), day=randint(1, 28))
         ip = '{}.{}.{}.{}'.format(randint(1, 255), randint(1, 255), randint(1, 255), randint(1, 255))
         records[randint(0, 10000), date] = [ip, 'login']
@@ -39,12 +41,12 @@ def chunk_aggr(partition, ip_users_date):
 
     for ((FK_NUMPERSO, PK_ANYOMESDIA), (IP_TERMINAL, _)) in partition.iteritems():
 
-            date = PK_ANYOMESDIA
+        date = PK_ANYOMESDIA
 
-            try:
-                ip_users_date[IP_TERMINAL].add((FK_NUMPERSO, date))
-            except KeyError:
-                ip_users_date[IP_TERMINAL] = {(FK_NUMPERSO, date)}
+        try:
+            ip_users_date[IP_TERMINAL].add((FK_NUMPERSO, date))
+        except KeyError:
+            ip_users_date[IP_TERMINAL] = {(FK_NUMPERSO, date)}
 
 
 @task(returns=set)
@@ -93,33 +95,44 @@ def compute_IPs(partition, blacklist, relationships):
                     user_a = users[a]
                     user_b = users[b]
                     # check if dates overlap
-                    if minmax_dates[user_a][0] <= minmax_dates[user_b][1] and minmax_dates[user_a][1] >= minmax_dates[user_b][0]:
-                        try:
+                    if minmax_dates[user_a][0] <= minmax_dates[user_b][1] and minmax_dates[user_a][1] >= \
+                            minmax_dates[user_b][0]:
+                        if user_a in relationships:
                             relationships[user_a].add(user_b)
-                        except KeyError:
+                        else:
                             relationships[user_a] = {user_b}
-                        try:
+                        if user_b in relationships:
                             relationships[user_b].add(user_a)
-                        except KeyError:
+                        else:
                             relationships[user_b] = {user_a}
 
 
 def main():
     # ############################# INITIALIZATION ########################### #
-    config.partition_strategy = "DYNAMIC"
+    try:
+        config.partition_strategy = sys.argv[1]
+        os.environ["NODES_NUMBER"] = sys.argv[3]
+    except:
+        config.partition_strategy = "SIMPLE"
     config.session.execute("DROP TABLE IF EXISTS test.example_dataset")
     config.session.execute("DROP TABLE IF EXISTS test.IPUsersInDate")
     config.session.execute("DROP TABLE IF EXISTS test.Relationships")
     records = IPlogs("test.example_dataset")
     ip_users_date = IPUsersInDate("test.IPUsersInDate")
     relationships = Relationships("test.Relationships")
-    csv_to_cassandra(records)
+    try:
+        nrows = int(sys.argv[2])
+    except:
+        nrows = 0
+    csv_to_cassandra(records, nrows)
+    time.sleep(15)
 
     start = time.time()
     for partition in records.split():
         chunk_aggr(partition, ip_users_date)
     compss_barrier()
     time1 = time.time()
+    print("Finished chunk_aggr, number of partitions: %s" % config.number_of_partitions)
 
     # ################## BLACKLIST AND MONTHS CHECK ########################## #
     blacklist = map(get_blacklist, ip_users_date.split())
@@ -129,29 +142,32 @@ def main():
 
     # ########################## FIND RELATIONSHIPS ########################## #
     time3 = time.time()
+    print("Finished get_blacklist, number of partitions: %s" % config.number_of_partitions)
     for partition in ip_users_date.split():
         compute_IPs(partition, blacklist, relationships)
     compss_barrier()
 
     end = time.time()
+    print("Finished compute_IPs, number of partitions: %s" % config.number_of_partitions)
     # ######################################################################## #
     n = 0
     for user, rels in relationships.iteritems():
         n += len(rels)
-        #print(user, rels)
     print("Number of relationships: %s" % (n / 2))
 
     chunk_aggr_time = time1 - start
     blacklist_comp_time = time2 - time1
     ips_comp_time = end - time3
 
-    print("IP relationships in overlapping dates:\n")
+    print("IP relationships in overlapping dates, with %s strategy and %s rows:\n" % (
+    config.partition_strategy.lower(), nrows + 200000))
     print("    chunk_aggr time:  %s seconds.\n" % round(chunk_aggr_time, 4))
     print("    get_blacklist time:  %s seconds.\n" % round(blacklist_comp_time, 4))
     print("    compute_IPs time:  %s seconds.\n" % round(ips_comp_time, 4))
 
-    with open("results.txt", "a") as results:
-        results.write("IP relationships in overlapping dates:\n")
+    with open("/home/bsc31/bsc31310/PartitionerTests/results.txt", "a") as results:
+        results.write("IP relationships in overlapping dates, with %s strategy and %s rows:\n" % (
+        config.partition_strategy.lower(), nrows + 200000))
         results.write("    chunk_aggr time:  %s seconds.\n" % round(chunk_aggr_time, 4))
         results.write("    get_blacklist time:  %s seconds.\n" % round(blacklist_comp_time, 4))
         results.write("    compute_IPs time:  %s seconds.\n\n" % round(ips_comp_time, 4))

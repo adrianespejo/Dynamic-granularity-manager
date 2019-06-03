@@ -6,16 +6,22 @@ from hecuba import config, StorageDict
 
 class MyData(StorageDict):
     '''
-    @TypeSpec dict<<key0:int, key1:int>, val0:str, val1:float, val2:int, val3:str, val4:str, val5:float, val6:str>
+    @TypeSpec dict<<i:int, j:int>, val0:str, val1:float, val2:int, val3:str, val4:str, val5:float, val6:str>
     '''
 
 
-def gen_random_data(rows=10000):
+class Result(StorageDict):
+    '''
+    @TypeSpec dict<<i:int, j:int>, result:float>
+    '''
+
+
+def gen_random_data(N=10000):
     config.session.execute("DROP TABLE IF EXISTS my_ksp.my_data")
     my_data = MyData("my_ksp.my_data")
-    print("Generating random data: %s rows" % rows)
-    for i in range(0, rows/100):
-        for j in range(0, 100):
+    print("Generating random matrix: %s N" % N)
+    for i in range(0, N):
+        for j in range(0, N):
             row = gen_random_row()
             my_data[i, j] = row
 

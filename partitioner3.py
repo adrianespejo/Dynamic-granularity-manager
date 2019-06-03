@@ -179,14 +179,14 @@ class DynamicPartitioner(object):
                                         end_time double,
                                         PRIMARY KEY (storage_id))
                                         WITH default_time_to_live = 86400""")
-            print("Created table hecuba.partitioning.")
         except Exception as ex:
             print("Could not create table hecuba.partitioning.")
             raise ex
 
-        self._prepared_store_id = config.session.prepare("""INSERT INTO hecuba.partitioning
-                                                            (partitioning_uuid, storage_id, number_of_partitions)
-                                                            VALUES (?, ?, ?)""")
+        self._prepared_store_id =\
+            config.session.prepare("""INSERT INTO hecuba.partitioning
+                                      (partitioning_uuid, storage_id, number_of_partitions)
+                                      VALUES (?, ?, ?)""")
         self._partitioning_uuid = uuid.uuid4()
         self._partitions_time = defaultdict(list)
         self._best_granularity = None
@@ -200,7 +200,6 @@ class DynamicPartitioner(object):
                       768, 128, 256, 48, 96, 128, 192, 256, 384, 512, 768]
         self._basic_partitions = partitions[:self._initial_send]  # -1 because one node will be the master
         self._idle_nodes = self._initial_send
-        print("Basic partitions: %s" % self._basic_partitions)
 
     def _tokens_partitions(self, tokens, min_number_of_tokens):
         """
@@ -265,12 +264,7 @@ class DynamicPartitioner(object):
                         config.number_of_partitions, set_best = self._best_time_per_token()
                         if [] not in self._partitions_time.values() and set_best:
                             self._best_granularity = config.number_of_partitions
-                            print("Choosed %s partitions without finishing all the tasks" % config.number_of_partitions)
 
-                        print("Idle nodes: %s, sending another task of %s partitions" % (
-                            self._idle_nodes, config.number_of_partitions))
-                        # print(self._partitions_time)
-                        print("\n")
                         break
                     time.sleep(1)
                     self._update_partitions_time()
@@ -321,7 +315,6 @@ class DynamicPartitioner(object):
                             partition_time += t["end_time"] - t["start_time"]
 
                     partition_time = partition_time / float(len(partition_times))
-                    print("Time of %s partitions: %s seconds" % (number_of_partitions, partition_time))
                     if partition_time >= 2.0:
                         try:
                             times_per_token[number_of_partitions] = partition_time / tkns_per_partition
@@ -329,7 +322,6 @@ class DynamicPartitioner(object):
                             pass
 
         sorted_times = sorted(times_per_token.items(), key=lambda item: item[1])
-        # print(sorted_times)
 
         if len(sorted_times) > 0:
             best_granularity, best_time = sorted_times[0]

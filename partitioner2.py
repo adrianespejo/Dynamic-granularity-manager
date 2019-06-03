@@ -180,14 +180,14 @@ class DynamicPartitioner(object):
                                         PRIMARY KEY (storage_id))
                                         WITH default_time_to_live = 86400""")
             config.session.execute("TRUNCATE TABLE hecuba.partitioning")
-            print("Created table hecuba.partitioning.")
         except Exception as ex:
             print("Could not create table hecuba.partitioning.")
             raise ex
 
-        self._prepared_store_id = config.session.prepare("""INSERT INTO hecuba.partitioning
-                                                            (table_name, storage_id, number_of_partitions)
-                                                            VALUES (?, ?, ?)""")
+        self._prepared_store_id =\
+            config.session.prepare("""INSERT INTO hecuba.partitioning
+                                      (table_name, storage_id, number_of_partitions)
+                                      VALUES (?, ?, ?)""")
         self._partitions_time = defaultdict(list)
         self._best_granularity = None
         # compute self._basic_partitions depending on the number of nodes
@@ -199,7 +199,6 @@ class DynamicPartitioner(object):
         partitions = [32, 64, 128, 256, 512, 768, 1024, 2048, 48, 96, 192, 384, 1536, 3072, 4096, 5120]
         self._basic_partitions = partitions[:self._initial_send]
         self._idle_nodes = self._initial_send
-        print("Basic partitions: %s" % self._basic_partitions)
 
     def _tokens_partitions(self, tokens, min_number_of_tokens):
         """
@@ -259,10 +258,6 @@ class DynamicPartitioner(object):
                     return config.number_of_partitions
 
                 config.number_of_partitions = self._best_time_per_token()
-                print("Idle nodes: %s, sending another task of %s partitions" % (
-                self._idle_nodes, config.number_of_partitions))
-                print(self._partitions_time)
-                print("\n")
 
         return config.number_of_partitions
 
@@ -284,12 +279,8 @@ class DynamicPartitioner(object):
                     times_per_token[number_of_partitions] = partition_time / tkns_per_partition
                 except ZeroDivisionError:
                     pass
-            # print("Number of partitions: %s, time: %s, tkns per partitions: %s, time per token: %s" % (number_of_partitions, partition_time, tkns_per_partition, times_per_token[number_of_partitions]))
 
         sorted_times = sorted(times_per_token.items(), key=lambda item: item[1])
-        # print(sorted_times)
-        print("Tiempo de la mejor granularidad %s particiones: %s s" % (sorted_times[0][0], sum(
-            self._partitions_time[sorted_times[0][0]]) / float(len(self._partitions_time[sorted_times[0][0]]))))
 
         best = None
         for parts, _ in sorted_times:

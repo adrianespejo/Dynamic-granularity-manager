@@ -6,6 +6,7 @@ from pycompss.api.parameter import *
 import os
 import sys
 
+
 def compute_stats(m, v):
     m.sum += v
     if v < m.min:
@@ -13,6 +14,7 @@ def compute_stats(m, v):
     if v > m.max:
         m.max = v
     m.count = m.count + 1
+
 
 def get_keys(partition):
     keyDict = {}
@@ -25,6 +27,7 @@ def get_keys(partition):
             keyDict[r.time][r.ilev][r.lat] = []
         keyDict[r.time][r.ilev][r.lat].append(r.lon)
     return keyDict
+
 
 @task(d=CONCURRENT)
 def interpolate(partition, d, NP, dist):
@@ -56,6 +59,7 @@ def interpolate(partition, d, NP, dist):
     d.update(localStats)
     del localStats
 
+
 if __name__ == "__main__":
     try:
         config.partition_strategy = sys.argv[1]
@@ -67,16 +71,18 @@ if __name__ == "__main__":
         config.partition_strategy = "SIMPLE"
 
     # Number of points in the normal grid
-    NP = 10#2560
+    NP = 10  # 2560
     dist = 360.0 / NP
     # Using same input data for each execution
     sdict = GridPoints('test.gtgd')
-    
+
     import numpy as np
+
     name = 'test' + str(np.random.randint(10000))
     dayStats = GlobalStats('day' + name)
 
     import time
+
     time1 = time.time()
     for partition in sdict.split():
         interpolate(partition, dayStats, NP, dist)
