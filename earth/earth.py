@@ -1,7 +1,7 @@
 from classes import GridPoints, GlobalStats
 from hecuba import config
 from pycompss.api.task import task
-from pycompss.api.api import compss_barrier, compss_wait_on
+from pycompss.api.api import compss_barrier
 from pycompss.api.parameter import *
 import os
 import sys
@@ -31,7 +31,6 @@ def get_keys(partition):
 
 @task(d=CONCURRENT)
 def interpolate(partition, d, NP, dist):
-    import time
     keyDict = get_keys(partition)
     localStats = GlobalStats()
     num_t = 4

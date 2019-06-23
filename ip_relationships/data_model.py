@@ -31,4 +31,3 @@ class Relationships(StorageDict):
     '''
     @TypeSpec dict<<user:int>, relationships:set<int>>
     '''
-

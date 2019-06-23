@@ -9,7 +9,7 @@ from pycompss.api.api import compss_wait_on
 from random import randint
 
 from hecuba import config
-from data_model import *
+from ip_relationships.data_model import *
 
 PUBLIC_SPACE_THRESHOLD = 10
 
@@ -160,14 +160,14 @@ def main():
     ips_comp_time = end - time3
 
     print("IP relationships in overlapping dates, with %s strategy and %s rows:\n" % (
-    config.partition_strategy.lower(), nrows + 200000))
+        config.partition_strategy.lower(), nrows + 200000))
     print("    chunk_aggr time:  %s seconds.\n" % round(chunk_aggr_time, 4))
     print("    get_blacklist time:  %s seconds.\n" % round(blacklist_comp_time, 4))
     print("    compute_IPs time:  %s seconds.\n" % round(ips_comp_time, 4))
 
     with open("/home/bsc31/bsc31310/PartitionerTests/results.txt", "a") as results:
         results.write("IP relationships in overlapping dates, with %s strategy and %s rows:\n" % (
-        config.partition_strategy.lower(), nrows + 200000))
+            config.partition_strategy.lower(), nrows + 200000))
         results.write("    chunk_aggr time:  %s seconds.\n" % round(chunk_aggr_time, 4))
         results.write("    get_blacklist time:  %s seconds.\n" % round(blacklist_comp_time, 4))
         results.write("    compute_IPs time:  %s seconds.\n\n" % round(ips_comp_time, 4))

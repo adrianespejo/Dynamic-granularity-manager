@@ -47,15 +47,6 @@ def gen_random_string(size=10, chars=string.ascii_uppercase + string.ascii_lower
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-if __name__ == "__main__":
-    try:
-        rows = int(sys.argv[1])
-    except IndexError:
-        rows = 40000
-
-    gen_random_data(rows)
-
-
 @task(returns=float)
 def my_task(A, result, a, b):
     start_task = time.time()

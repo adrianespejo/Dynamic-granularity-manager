@@ -203,7 +203,7 @@ class PartitionerTest(unittest.TestCase):
                 query = config.session.prepare("""UPDATE hecuba.partitioning
                                                   SET end_time = ?
                                                   WHERE storage_id = ?""")
-                config.session.execute(query, [time.time()+150, id_partition0])
+                config.session.execute(query, [time.time() + 150, id_partition0])
             else:
                 query = config.session.prepare("""UPDATE hecuba.partitioning
                                                   SET start_time = ?, end_time = ?
