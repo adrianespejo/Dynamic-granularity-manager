@@ -26,3 +26,7 @@ Este es el repositorio con todo el código fuente utilizado y implementado duran
     * partitioner4.py: cuarta versión del gestor dinámico.
     * api.py: implementación de la api de PyCOMPSs para Hecuba.
     * partitioner_tests.py: tests unitarios del particionador.
+
+* WordCount: ejemplo de **Word Count** usando Hecuba y PyCOMPSs.
+    * WordCount.py: código de la aplicación.
+    * data_model.py: modelo de datos.
